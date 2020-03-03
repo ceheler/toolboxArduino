@@ -1,23 +1,30 @@
 #include "globals.h"
 
-void stopLoop() {
+/*
+*  A infinite loop to stop the main arduino loop
+*/
+void stopLoop() {                                               
   for(;;)
   {
   }
 }
 
+/*
+* Takes in 2 sensor values and compares them against eachother to validate correlation
+*/
+
 void checkLid(int checkVal1, int checkVal2) {
-  Serial.print("checkLid function running");
-  Serial.print('\n');
   if ( checkVal1 != checkVal2) 
   {
     lidError++;
   }
 }
 
+/*
+* Takes in 2 sensors and determines if they are open (0) or closed (1) or faulty
+*/
+
 bool isLidOpen(int sensor1, int sensor2) {
-  Serial.print("isLidOpen funtion running");
-  Serial.print('\n');
   if (sensor1 && sensor2 == 0) 
   {
     return true;
@@ -28,22 +35,26 @@ bool isLidOpen(int sensor1, int sensor2) {
   } else 
   {
       lcd.setCursor(2,1);
-      lcd.print("Lid open flt");
+      lcd.print("Lid flt");
       stopLoop();
    }
 }
 
+/*
+* Reads 2 sensors for error checking as well as reads in a char that is used to determine which latch is opened
+*/
+
 void openLid(char i, int sensor1, int sensor2) {
   if ( i == 'L')
   {
-    Serial.print("Opening Left Latch:");
+    Serial.print("Opening Left Latch:");              // For error checking
     Serial.print('\n');
-    digitalWrite(solenoid2, LOW);
-    delay(650);
+    digitalWrite(solenoid2, LOW);                     // Actuates the air solenoid
+    delay(650);                                       // Delayes then releases the solenoid
     digitalWrite(solenoid2, HIGH);
+    delay(4000);                                      // Had to use two delays because this secion of code would skip intermittently 
     delay(4000);
-    delay(4000);
-    sensor1 = digitalRead(lidSense1);
+    sensor1 = digitalRead(lidSense1);                 // Check lid to ensure it opened or report the error to the lcd
     sensor2 = digitalRead(lidSense2);
     if(sensor1 && sensor2 != 0 && cycleCount > 1)
     {
@@ -57,12 +68,12 @@ void openLid(char i, int sensor1, int sensor2) {
       {
         cycleCount = cycleCountProm;
       }
-        EEPROM.write(addressInt, cycleCount);
+        EEPROM.write(addressInt, cycleCount);         // Write to EEPROM so that when restarted the number is stored (not used) 
         cycleCount++;
     }
     delay(1000);
   }
-  else if ( i == 'R')
+  else if ( i == 'R')                                 // wash rinse repeat for the other latch
   {
     Serial.print("Opening Right Latch");
     Serial.print('\n');
@@ -90,8 +101,12 @@ void openLid(char i, int sensor1, int sensor2) {
   }
 }
 
+/*
+* Takes no arguments and closes the lid
+*/
+
 void closeLid() {
-  Serial.print("Closing Lid");
+  Serial.print("Closing Lid");                      // error checking 
   Serial.print('\n');
   digitalWrite(solenoid1, LOW);
   delay(1000);
@@ -101,9 +116,11 @@ void closeLid() {
   
 }
 
+/*
+* If the lid is open report an error to the LCD
+*/
+
 void checkOpen(int sensor1, int sensor2) {
-  Serial.print("checkOpen Function Running");
-  Serial.print('\n');
   if (isLidOpen(sensor1, sensor2) == true)
   {
     lcd.setCursor(2,1);
